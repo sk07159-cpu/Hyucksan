@@ -119,7 +119,8 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYi0x-rLxpEufe2cqwSGVRub6vCcItpVJHrFR8jYkDvOs7fxnuhndVSA4G_fSeDJjJ/exec"; 
+    // 회원님이 제공해주신 새로운 웹앱 URL 적용 완료!
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLmRiUU_WDJdK6qIklVlHOccGTjTyvCpV1t4JM5A55HBCXyC85mr0EGdydamYDSsA/exec"; 
 
     let memberData = [];
     let isDataLoaded = false;
@@ -331,22 +332,35 @@
         list.innerHTML = html;
     }
 
+    /* 💡 저장 버그가 수정된 saveData 함수 */
     async function saveData(action) {
         if(!window.currentUser) return;
         let payload = { name: window.currentUser.성명, action: action };
         const btn = action === 'saveBirth' ? document.getElementById('birthSaveBtn') : document.getElementById('bizSaveBtn');
+        
         if(action === 'saveBirth') {
             payload.birth = document.getElementById('birthInput').value;
             payload.type = document.getElementById('calendarType').value;
             if(payload.birth.length !== 8) { showToast("생년월일 8자리를 입력하세요."); return; }
-        } else { payload.business = document.getElementById('bizInput').value; }
+        } else { 
+            payload.business = document.getElementById('bizInput').value; 
+        }
+        
         btn.innerText = "저장 중..."; btn.disabled = true;
         try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            showToast("정보가 저장되었습니다. 🌟");
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                redirect: 'follow',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload) 
+            });
+            showToast("정보가 성공적으로 저장되었습니다. 🌟");
             setTimeout(() => location.reload(), 1500); 
-        } catch(e) { showToast("통신 오류가 발생했습니다."); } 
-        finally { btn.innerText = "저장 완료"; btn.disabled = false; }
+        } catch(e) { 
+            showToast("통신 오류가 발생했습니다. 다시 시도해 주세요."); 
+        } finally { 
+            btn.innerText = "저장 완료"; btn.disabled = false; 
+        }
     }
 
     function showFortuneProcess() {
