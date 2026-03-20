@@ -11,23 +11,34 @@
         h1 { color: var(--primary); font-size: 26px; margin: 0 0 15px 0; border-bottom: 3px solid var(--primary); padding-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .status-tag { font-size: 11px; font-weight: bold; margin-bottom: 20px; display: inline-block; padding: 6px 14px; border-radius: 50px; background: #eee; transition: 0.3s; }
         .status-success { background: #e8f5e9; color: #2e7d32; }
-        .search-box { margin-bottom: 25px; }
+        .search-box { margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 16px; border: 2px solid #ddd; border-radius: 15px; font-size: 17px; outline: none; box-sizing: border-box; text-align: center; transition: 0.3s; }
         textarea { height: 120px; text-align: left; resize: none; font-family: inherit; margin-top: 10px; white-space: pre-wrap; }
+        
+        /* 그룹 타이틀 스타일 */
+        .group-title { font-size: 14px; font-weight: bold; color: #555; text-align: left; margin: 20px 0 8px 5px; padding-bottom: 5px; border-bottom: 2px dashed #eee; }
+        
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 10px; }
-        button { padding: 16px 5px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 16px; color: white; transition: 0.2s; }
+        button { padding: 16px 5px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 15px; color: white; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         button:active { transform: scale(0.96); opacity: 0.9; }
+        .full-btn { grid-column: 1 / -1; } 
+
         .bg-navy { background: var(--primary); }
         .bg-blue { background: var(--blue); }
         .bg-green { background: var(--green); }
         .bg-orange { background: var(--orange); }
         .bg-gold { background: #fbc02d; color: #333; }
         .bg-gray { background: #546e7a; }
+        .bg-red { background: #d32f2f; }
+
         #displayArea { width: 100%; max-width: 480px; display: none; }
         .content-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-top: 20px; text-align: left; }
         .biz-text { white-space: pre-wrap; word-break: break-all; line-height: 1.6; color: #555; display: block; margin-top: 5px; }
         .fortune-box { background: #e3f2fd; border: 2px dashed var(--blue); padding: 20px; border-radius: 20px; margin-top: 20px; line-height: 1.7; }
         .highlight { color: #d32f2f; font-weight: bold; }
+        .fee-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .fee-row:last-child { border-bottom: none; }
+        .fee-title { font-weight: bold; color: #555; }
         .lotto-ball { display: inline-block; width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 50%; background: #ffca28; color: #333; font-weight: bold; font-size: 14px; border: 1.5px solid #ffa000; margin-right: 4px; }
     </style>
 </head>
@@ -36,20 +47,33 @@
 <div class="card">
     <h1>🏛️ 혁산회 통합 포털</h1>
     <span id="loadStatus" class="status-tag">⏳ 데이터 연결 중...</span>
+    
     <div class="search-box">
         <input type="text" id="nameInput" placeholder="성명을 입력하세요">
     </div>
+
+    <div class="group-title">💰 연회비</div>
     <div class="btn-group">
-        <button class="bg-navy" onclick="showFeeInfo()">💰 나의 회비</button>
-        <button class="bg-blue" onclick="showList()">👥 정회원 명단</button>
+        <button class="bg-navy" onclick="showFeeInfo()">나의 회비</button>
+        <button class="bg-blue" onclick="showList()">정회원 보기</button>
     </div>
+
+    <div class="group-title">🤝 협찬</div>
     <div class="btn-group">
-        <button class="bg-gold" onclick="showDonors()">🤝 협찬자 명단</button>
-        <button class="bg-orange" onclick="showFortuneProcess()">🔮 오늘 운세</button>
+        <button class="bg-gold" onclick="showDonors('2026')">2026년 누적 협찬</button>
+        <button class="bg-orange" onclick="showDonors('sisanje')">시산제 협찬</button>
     </div>
+
+    <div class="group-title">🏬 사업장</div>
     <div class="btn-group">
-        <button class="bg-green" onclick="showBusiness()">🏬 사업장 보기</button>
-        <button class="bg-gray" onclick="showBizEdit()">✍️ 내 사업장 수정</button>
+        <button class="bg-green" onclick="showBusiness()">사업장 소개</button>
+        <button class="bg-gray" onclick="showBizEdit()">내 사업장 수정</button>
+        <button class="bg-blue full-btn" onclick="showFortuneProcess()">🔮 오늘의 사업운</button>
+    </div>
+
+    <div class="group-title">🏔️ 2026년 시산제 회비</div>
+    <div class="btn-group">
+        <button class="bg-red full-btn" onclick="showSisanjeFeeList()">시산제 회비 납부자</button>
     </div>
 </div>
 
@@ -74,7 +98,9 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFZoGhNsw_oaWwzpoClL_JRKtCec3UJVIWVHiDCAvpoYrkYAZ7n4VfTSflLzu2a4LP/exec"; 
+    // 전달해주신 웹앱 URL이 완벽하게 적용되었습니다!
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYi0x-rLxpEufe2cqwSGVRub6vCcItpVJHrFR8jYkDvOs7fxnuhndVSA4G_fSeDJjJ/exec"; 
+
     let memberData = [];
     let isDataLoaded = false;
 
@@ -112,15 +138,89 @@
         resetDisplay();
         const info = document.getElementById('infoContent');
         info.style.display = "block";
-        info.innerHTML = `<h3>💰 ${user.성명} 회원님 정보</h3><p>회비 납부: <span class="highlight">입금 완료</span></p><p>연회비: 30,000원</p>`;
+        
+        const feeAnnual = Number(user['금액']) > 0 ? Number(user['금액']).toLocaleString() + '원 납부' : '미납/정보없음';
+        const feeSisanje = user['시산제 회비'] || '미납/정보없음';
+        const sponsor2026 = user['2026년 협찬 누적'] ? Number(user['2026년 협찬 누적']).toLocaleString() + '원' : '0원';
+        const sponsorSisanje = user['시산제 협찬'] ? Number(user['시산제 협찬']).toLocaleString() + '원' : '0원';
+
+        info.innerHTML = `
+            <h3>💰 ${user.성명} 회원님 회비/협찬 내역</h3>
+            <div class="fee-row">
+                <span class="fee-title">연회비 (금액)</span>
+                <span class="${feeAnnual.includes('납부') ? 'highlight' : ''}">${feeAnnual}</span>
+            </div>
+            <div class="fee-row">
+                <span class="fee-title">시산제 회비</span>
+                <span class="${feeSisanje !== '미납/정보없음' ? 'highlight' : ''}">${feeSisanje}</span>
+            </div>
+            <div class="fee-row">
+                <span class="fee-title">2026년 누적 협찬</span>
+                <span style="color:var(--green); font-weight:bold;">${sponsor2026}</span>
+            </div>
+            <div class="fee-row">
+                <span class="fee-title">시산제 협찬</span>
+                <span style="color:var(--orange); font-weight:bold;">${sponsorSisanje}</span>
+            </div>
+        `;
+    }
+
+    function showList() {
+        if(!isDataLoaded) return;
+        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
+        let html = `<h3>👥 정회원 명단</h3><p style="font-size:12px; color:#777;">(연회비를 납부하신 회원님들입니다)</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
+        
+        const regularMembers = memberData.filter(u => Number(u['금액']) > 0);
+        regularMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
+        html += `</div>`;
+        list.innerHTML = html;
+    }
+
+    function showDonors(type) {
+        if(!isDataLoaded) return;
+        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
+        
+        let title = type === '2026' ? '2026년 누적 협찬' : '시산제 협찬';
+        let html = `<h3 style="margin-bottom:10px;">🤝 ${title}하신 분</h3><p style="font-size:14px; color:var(--green); font-weight:bold; margin-bottom:15px;">"당신의 협찬으로 혁산회가 발전합니다. 감사합니다."</p>`;
+        
+        let targetColumn = type === '2026' ? '2026년 협찬 누적' : '시산제 협찬';
+        
+        memberData.filter(u => Number(u[targetColumn]) > 0).forEach(u => {
+            html += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
+                        <span>${u.성명} 회원님</span>
+                        <b>${Number(u[targetColumn]).toLocaleString()}원</b>
+                     </div>`;
+        });
+        list.innerHTML = html;
+    }
+
+    function showSisanjeFeeList() {
+        if(!isDataLoaded) return;
+        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
+        let html = `<h3>🏔️ 시산제 회비 납부자 명단</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
+        
+        const sisanjeMembers = memberData.filter(u => u['시산제 회비'] && u['시산제 회비'].toString().trim() !== '');
+        sisanjeMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
+        html += `</div>`;
+        list.innerHTML = html;
     }
 
     function showBizEdit() {
         const user = findUser(); if(!user) return;
         resetDisplay();
         document.getElementById('bizEditSection').style.display = "block";
-        document.getElementById('bizInput').value = user.사업장소개 || user['사업장 소개'] || '';
+        document.getElementById('bizInput').value = user['사업장소개'] || '';
         window.currentUser = user; 
+    }
+
+    function showBusiness() {
+        if(!isDataLoaded) return;
+        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
+        let html = `<h3>🏬 사업장 소개</h3>`;
+        memberData.filter(u=>u['사업장소개'] && u['사업장소개'].trim() !== '').forEach(u=> {
+            html += `<div style="margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #f0f0f0;"><b style="color:var(--primary); font-size:17px;">${u.성명}</b><span class="biz-text">${u['사업장소개']}</span></div>`;
+        });
+        list.innerHTML = html;
     }
 
     async function saveData(action) {
@@ -145,7 +245,7 @@
         const user = findUser(); if(!user) return;
         resetDisplay();
         window.currentUser = user;
-        if(!user.생년월일) document.getElementById('birthSection').style.display = "block";
+        if(!user['생년월일']) document.getElementById('birthSection').style.display = "block";
         else showFortune();
     }
 
@@ -166,12 +266,18 @@
         const finalSeed = dateSeed + nameSeed + 62; 
         
         const lucks = [
-            "뜻밖의 반가운 소식이 들려와 입가에 미소가 번집니다. 😊", "재물운이 활짝 열리는 날! 작은 횡재수가 기다립니다. 💰",
-            "자신감을 가지고 전진하세요. 당신의 능력이 빛을 발합니다. ✨", "주변 사람들에게 칭찬받는 즐거운 하루가 됩니다. 👍",
-            "막혔던 고민이 시원하게 풀리는 마법 같은 날입니다. 🌊", "오늘은 서두르지 말고 여유를 가질 때 복이 들어옵니다. 🐢",
-            "귀인의 도움으로 어려운 난관을 쉽게 극복할 운세입니다. 🤝", "오늘은 당신이 가는 곳마다 주인공이 되는 기운입니다. 👑",
-            "창의적인 아이디어가 솟아나는 날입니다. 기록해 두세요! 📝", "깜짝 선물을 받거나 이득이 생기는 기분 좋은 하루입니다. 🎁"
+            "뜻밖의 반가운 소식이 들려와 사업에 활기가 띱니다. 😊", "재물운이 활짝 열리는 날! 큰 거래가 성사될 수 있습니다. 💰",
+            "자신감을 가지고 전진하세요. 당신의 사업 능력이 빛을 발합니다. ✨", "고객들에게 칭찬받고 입소문이 나는 즐거운 하루가 됩니다. 👍",
+            "막혔던 자금이나 고민이 시원하게 풀리는 마법 같은 날입니다. 🌊", "오늘은 서두르지 말고 여유를 가질 때 귀한 인연이 찾아옵니다. 🐢",
+            "귀인의 도움으로 어려운 난관을 쉽게 극복할 사업운입니다. 🤝", "오늘은 당신의 사업장이 지역의 주인공이 되는 기운입니다. 👑",
+            "창의적인 마케팅 아이디어가 솟아나는 날입니다. 기록해 두세요! 📝", "깜짝 계약이나 이득이 생기는 기분 좋은 하루입니다. 🎁"
         ];
+        
+        let mainLuck = lucks[finalSeed % lucks.length];
+        if (today.getDay() === 5) { 
+            mainLuck = "고양시 혁산회에 아주 기쁜 소식이 날아든다. 회원 모두 이 기쁜 소식에 어울려 덩실덩실 춤을 추면 자손대대 복이 내린다 🎊";
+        }
+
         const ilsanSpots = [
             "정발산", "호수공원", "행주산성", "대화역", "주엽역", "일산역", "백마역", "애니골", "화정역", "고봉산", 
             "주엽동", "일산시장", "문화광장", "원마운트", "일산 가로수길", "밤리단길", "저동초등학교", "푸른샘음악학원", 
@@ -190,10 +296,9 @@
         ];
         const colors = ["청록색", "황금색", "순백색", "하늘색", "보라색", "진갈색"];
         
-        const mainLuck = lucks[finalSeed % lucks.length];
         const spot = ilsanSpots[(finalSeed + 17) % ilsanSpots.length];
         const blessing = spotBlessings[(finalSeed + 13) % spotBlessings.length];
-        const rest = rests[(finalSeed + 23) % rests.length]; // 맛집 추천 시드값 분리
+        const rest = rests[(finalSeed + 23) % rests.length];
         const color = colors[(finalSeed + 11) % colors.length];
         const energy = ((finalSeed * 13) % 11) + 90;
 
@@ -207,13 +312,13 @@
 
         fBox.innerHTML = `
             <div style="text-align:right; font-size:12px; color:#999;">📅 ${dateStr}</div>
-            <h3>🔮 ${user.성명}님 운세</h3>
-            <p style="font-size:16px; line-height:1.5;"><b>"${mainLuck}"</b></p>
+            <h3>🔮 ${user.성명}님 오늘의 사업운</h3>
+            <p style="font-size:16px; line-height:1.5; color:#d32f2f;"><b>"${mainLuck}"</b></p>
             <p style="font-size:15px; color:var(--primary); font-weight:bold; background:#fff; padding:10px; border-radius:10px; border:1px solid #cce3f6;">
                 📍 일산 지역 복채: <br>"${spot}${blessing}"
             </p>
             <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-            <p>⚡ 혁산 에너지: <span class="highlight">${energy}%</span></p>
+            <p>⚡ 사업장 에너지: <span class="highlight">${energy}%</span></p>
             <p>🎨 행운 색상: <b>${color}</b></p>
             <p>🍽️ 추천맛집: <b>${rest}</b></p>
             <div style="margin:20px 0; padding:15px; background:#fff; border-radius:15px; border:1px solid #eee; text-align:center;">
@@ -223,34 +328,6 @@
             </div>
             <p style="font-size:11px; color:#777; text-align:center; font-style:italic;">" ${user.성명}님의 성명 사주를 기반으로 분석한 결과입니다. "</p>
         `;
-    }
-
-    function showList() {
-        if(!isDataLoaded) return;
-        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
-        let html = `<h3>👥 정회원 명단</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">`;
-        memberData.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
-        html += `</div>`;
-        list.innerHTML = html;
-    }
-
-    function showDonors() {
-        if(!isDataLoaded) return;
-        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
-        let html = `<h3 style="margin-bottom:10px;">🤝 협찬하신 분</h3><p style="font-size:14px; color:var(--green); font-weight:bold; margin-bottom:15px;">"당신의 협찬으로 혁산회가 발전합니다. 감사합니다."</p>`;
-        memberData.filter(u=>Number(u.협찬금)>0).forEach(u=> html += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>${u.성명} 회원님</span><b>${Number(u.협찬금).toLocaleString()}원</b></div>`);
-        list.innerHTML = html;
-    }
-
-    function showBusiness() {
-        if(!isDataLoaded) return;
-        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
-        let html = `<h3>🏬 사업장 보기</h3>`;
-        memberData.filter(u=>u.사업장소개 || u['사업장 소개']).forEach(u=> {
-            const bizContent = u.사업장소개 || u['사업장 소개'];
-            html += `<div style="margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #f0f0f0;"><b style="color:var(--primary); font-size:17px;">${u.성명}</b><span class="biz-text">${bizContent}</span></div>`;
-        });
-        list.innerHTML = html;
     }
 </script>
 </body>
