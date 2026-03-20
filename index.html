@@ -47,9 +47,15 @@
         .fee-row:last-child { border-bottom: none; }
         .fee-title { font-weight: bold; color: #555; }
         .lotto-ball { display: inline-block; width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 50%; background: #ffca28; color: #333; font-weight: bold; font-size: 14px; border: 1.5px solid #ffa000; margin-right: 4px; }
+        
+        /* 🌷 예쁜 알림창 (Toast) 스타일 */
+        .toast { visibility: hidden; min-width: 250px; background-color: rgba(0, 0, 0, 0.85); color: #fff; text-align: center; border-radius: 30px; padding: 16px 20px; position: fixed; z-index: 1000; left: 50%; bottom: 40px; transform: translateX(-50%); font-size: 15px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: opacity 0.4s, bottom 0.4s; opacity: 0; line-height: 1.4; }
+        .toast.show { visibility: visible; opacity: 1; bottom: 60px; }
     </style>
 </head>
 <body>
+
+<div id="toastMsg" class="toast"></div>
 
 <div class="card">
     <h1>🏛️ 혁산회 통합 포털</h1>
@@ -75,7 +81,7 @@
     <div class="group-title">🤝 협찬</div>
     <div class="btn-group">
         <button class="bg-gold" onclick="showDonors('2026')">2026년 누적 협찬</button>
-        <button class="bg-orange" onclick="showDonors('sisanje')">시산제 협찬</button>
+        <button class="bg-orange" id="eventSponBtn" onclick="showDonors('event')">해당행사 협찬</button>
     </div>
 
     <div class="group-title">🏬 사업장</div>
@@ -85,10 +91,10 @@
         <button class="bg-blue full-btn" onclick="showFortuneProcess()">🔮 오늘의 사업운</button>
     </div>
 
-    <div class="group-title">🏔️ 시산제</div>
+    <div class="group-title" id="eventGroupTitle">🏔️ 행사</div>
     <div class="btn-group">
-        <button class="bg-red" onclick="showSisanjePart()">시산제 참여</button>
-        <button class="bg-navy" onclick="showSisanjePay()">회비 납부</button>
+        <button class="bg-red" id="eventPartBtn" onclick="showEventPart()">행사 참여</button>
+        <button class="bg-navy" onclick="showEventPay()">회비 납부</button>
     </div>
 </div>
 
@@ -118,6 +124,11 @@
     let memberData = [];
     let isDataLoaded = false;
 
+    // 현재 달의 행사 변수 (시트 오른쪽 열을 기반으로 자동 세팅됨)
+    let currentEventName = "시산제";
+    let currentEventFeeCol = "시산제 회비";
+    let currentEventSponCol = "시산제 협찬";
+
     window.onload = async () => {
         const statusTag = document.getElementById('loadStatus');
         try { 
@@ -126,15 +137,50 @@
             isDataLoaded = true;
             statusTag.innerText = "✅ 실시간 데이터 연결 성공";
             statusTag.className = "status-tag status-success";
+
+            // 🎯 스마트 자동화: 가장 최근(오른쪽)에 만들어진 행사 회비 열 찾기
+            if(memberData.length > 0) {
+                const keys = Object.keys(memberData[0]);
+                for (let i = keys.length - 1; i >= 0; i--) {
+                    // '회비'라는 글자가 들어가고, '연회비'가 아닌 가장 우측 열을 찾음
+                    if (keys[i].includes('회비') && !keys[i].includes('연회비')) {
+                        currentEventFeeCol = keys[i];
+                        currentEventName = keys[i].replace('회비', '').trim(); // "시산제 회비" -> "시산제"
+                        break;
+                    }
+                }
+                
+                // 해당 행사의 협찬 열 찾기 (예: "시산제 협찬")
+                for (let i = keys.length - 1; i >= 0; i--) {
+                    if (keys[i].includes(currentEventName) && keys[i].includes('협찬')) {
+                        currentEventSponCol = keys[i];
+                        break;
+                    }
+                }
+
+                // 화면 메뉴 이름 자동 업데이트
+                document.getElementById('eventGroupTitle').innerText = `🏔️ ${currentEventName}`;
+                document.getElementById('eventPartBtn').innerText = `${currentEventName} 참여`;
+                document.getElementById('eventSponBtn').innerText = `${currentEventName} 협찬`;
+            }
+
         } catch(e) { statusTag.innerText = "❌ 연결 실패 (새로고침 하세요)"; }
     };
 
+    /* 🌷 정중한 알림창 함수 */
+    function showToast(msg) {
+        const toast = document.getElementById("toastMsg");
+        toast.innerText = msg;
+        toast.className = "toast show";
+        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+
     function findUser() {
-        if(!isDataLoaded) { alert("데이터 로딩 중입니다."); return null; }
+        if(!isDataLoaded) { showToast("데이터 로딩 중입니다. 잠시만 기다려주세요."); return null; }
         const name = document.getElementById('nameInput').value.trim();
-        if(!name) { alert("성명을 입력하세요."); return null; }
+        if(!name) { showToast("정보를 확인하기 위해\n이름을 입력하시기 바랍니다. 🌷"); return null; }
         const user = memberData.find(u => u.성명 === name);
-        if(!user) alert("명단에 없습니다.");
+        if(!user) { showToast("명단에 없는 이름입니다.\n다시 한번 확인해 주세요."); return null; }
         return user;
     }
 
@@ -154,10 +200,19 @@
         info.style.display = "block";
         
         const feeAnnual = Number(user['금액']) > 0 ? Number(user['금액']).toLocaleString() + '원 납부' : '미납/정보없음';
-        const sFee = Number(user['시산제 회비']);
-        const feeSisanje = (sFee > 0) ? sFee.toLocaleString() + '원 납부' : '미납/정보없음';
+        
+        // 🎯 10원 입력 시 메시지 처리 로직
+        const eFeeRaw = Number(user[currentEventFeeCol]);
+        let feeEventHtml = '미신청/미납';
+        if (eFeeRaw === 10) {
+            feeEventHtml = `<span style="color:#d32f2f; font-weight:bold;">${currentEventName} 회비 송금해 주세요 🙏</span>`;
+        } else if (eFeeRaw >= 10000) {
+            feeEventHtml = `<span class="highlight">${eFeeRaw.toLocaleString()}원 납부</span>`;
+        }
+
         const sponsor2026 = user['2026년 협찬 누적'] ? Number(user['2026년 협찬 누적']).toLocaleString() + '원' : '0원';
-        const sponsorSisanje = user['시산제 협찬'] ? Number(user['시산제 협찬']).toLocaleString() + '원' : '0원';
+        const sponsorEventRaw = Number(user[currentEventSponCol]);
+        const sponsorEventText = sponsorEventRaw > 0 ? sponsorEventRaw.toLocaleString() + '원' : '0원';
 
         info.innerHTML = `
             <h3>💰 ${user.성명} 회원님 회비/협찬 내역</h3>
@@ -166,16 +221,16 @@
                 <span class="${feeAnnual.includes('납부') ? 'highlight' : ''}">${feeAnnual}</span>
             </div>
             <div class="fee-row">
-                <span class="fee-title">시산제 회비</span>
-                <span class="${feeSisanje.includes('납부') ? 'highlight' : ''}">${feeSisanje}</span>
+                <span class="fee-title">${currentEventName} 회비</span>
+                <span>${feeEventHtml}</span>
             </div>
             <div class="fee-row">
                 <span class="fee-title">2026년 누적 협찬</span>
                 <span style="color:var(--green); font-weight:bold;">${sponsor2026}</span>
             </div>
             <div class="fee-row">
-                <span class="fee-title">시산제 협찬</span>
-                <span style="color:var(--orange); font-weight:bold;">${sponsorSisanje}</span>
+                <span class="fee-title">${currentEventName} 협찬</span>
+                <span style="color:var(--orange); font-weight:bold;">${sponsorEventText}</span>
             </div>
         `;
     }
@@ -183,9 +238,10 @@
     function showList() {
         if(!isDataLoaded) return;
         resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
-        let html = `<h3>👥 정회원 명단</h3><p style="font-size:12px; color:#777;">(연회비를 납부하신 회원님들입니다)</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
         
         const regularMembers = memberData.filter(u => Number(u['금액']) > 0);
+        let html = `<h3>👥 정회원 명단 (${regularMembers.length}명)</h3><p style="font-size:12px; color:#777;">(연회비를 납부하신 회원님들입니다)</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
+        
         regularMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
         html += `</div>`;
         list.innerHTML = html;
@@ -195,10 +251,10 @@
         if(!isDataLoaded) return;
         resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
         
-        let title = type === '2026' ? '2026년 누적 협찬' : '시산제 협찬';
-        let html = `<h3 style="margin-bottom:10px;">🤝 ${title}하신 분</h3><p style="font-size:14px; color:var(--green); font-weight:bold; margin-bottom:15px;">"당신의 협찬으로 혁산회가 발전합니다. 감사합니다."</p>`;
+        let targetColumn = type === '2026' ? '2026년 협찬 누적' : currentEventSponCol;
+        let title = type === '2026' ? '2026년 누적 협찬' : `${currentEventName} 협찬`;
         
-        let targetColumn = type === '2026' ? '2026년 협찬 누적' : '시산제 협찬';
+        let html = `<h3 style="margin-bottom:10px;">🤝 ${title}하신 분</h3><p style="font-size:14px; color:var(--green); font-weight:bold; margin-bottom:15px;">"당신의 협찬으로 혁산회가 발전합니다. 감사합니다."</p>`;
         
         memberData.filter(u => Number(u[targetColumn]) > 0).forEach(u => {
             html += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
@@ -209,33 +265,32 @@
         list.innerHTML = html;
     }
 
-    /* 🏔️ 시산제 참여 명단 (0원 이상) */
-    function showSisanjePart() {
+    /* 🏔️ 동적 행사 참여 명단 (10원 이상) */
+    function showEventPart() {
         if(!isDataLoaded) return;
         resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
-        let html = `<h3>🏔️ 시산제 참여 명단</h3><p style="font-size:12px; color:#777;">(참여가 확인된 회원님들입니다)</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
         
-        const partMembers = memberData.filter(u => Number(u['시산제 회비']) > 0);
+        const partMembers = memberData.filter(u => Number(u[currentEventFeeCol]) >= 10);
+        
+        let html = `<h3>🏔️ ${currentEventName} 참여 명단 (${partMembers.length}명)</h3><p style="font-size:12px; color:#777;">(참석 신청이 확인된 회원님들입니다)</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
         partMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
         html += `</div>`;
         list.innerHTML = html;
     }
 
-    /* 💳 시산제 회비 납부 명단 (납부/미납 분리) */
-    function showSisanjePay() {
+    /* 💳 동적 행사 회비 납부 명단 (10원=미납 / 10000원이상=납부) */
+    function showEventPay() {
         if(!isDataLoaded) return;
         resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
         
-        const paidMembers = memberData.filter(u => Number(u['시산제 회비']) > 0);
-        const unpaidMembers = memberData.filter(u => {
-            const fee = Number(u['시산제 회비']);
-            return isNaN(fee) || fee <= 0 || u['시산제 회비'] === '';
-        });
+        const paidMembers = memberData.filter(u => Number(u[currentEventFeeCol]) >= 10000);
+        // 정확히 10원만 입력된 사람을 미납부자로 분류
+        const unpaidMembers = memberData.filter(u => Number(u[currentEventFeeCol]) === 10);
 
         paidMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko'));
         unpaidMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko'));
 
-        let html = `<h3>💳 시산제 회비 납부 현황</h3>`;
+        let html = `<h3>💳 ${currentEventName} 회비 납부 현황</h3>`;
         
         html += `<h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">✅ 납부 완료 (${paidMembers.length}명)</h4>`;
         html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom: 25px;">`;
@@ -247,10 +302,9 @@
         unpaidMembers.forEach(u=> html += `<div style="color: #777;">${u.성명} 회원님</div>`);
         html += `</div>`;
 
-        // 화면 맨 아래에 계좌번호 다시 안내
         html += `
             <div style="margin-top:30px; padding:20px; background:#f8f9fa; border-radius:15px; border:2px dashed var(--primary); text-align:center;">
-                <p style="font-size:14px; font-weight:bold; color:#555; margin:0 0 8px 0;">💳 시산제 회비 납부 계좌</p>
+                <p style="font-size:14px; font-weight:bold; color:#555; margin:0 0 8px 0;">💳 회비 납부 계좌</p>
                 <p style="font-size:18px; color:var(--primary); font-weight:800; margin:0;">7942-07-57606 카카오뱅크</p>
                 <p style="font-size:13px; color:#666; margin:5px 0 0 0;">(한수경.혁신산우회)</p>
             </div>
@@ -284,14 +338,14 @@
         if(action === 'saveBirth') {
             payload.birth = document.getElementById('birthInput').value;
             payload.type = document.getElementById('calendarType').value;
-            if(payload.birth.length !== 8) return alert("8자리를 입력하세요.");
+            if(payload.birth.length !== 8) { showToast("생년월일 8자리를 입력하세요."); return; }
         } else { payload.business = document.getElementById('bizInput').value; }
         btn.innerText = "저장 중..."; btn.disabled = true;
         try {
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            alert("정보가 저장되었습니다.");
-            location.reload(); 
-        } catch(e) { alert("통신 오류가 발생했습니다."); } 
+            showToast("정보가 저장되었습니다. 🌟");
+            setTimeout(() => location.reload(), 1500); 
+        } catch(e) { showToast("통신 오류가 발생했습니다."); } 
         finally { btn.innerText = "저장 완료"; btn.disabled = false; }
     }
 
