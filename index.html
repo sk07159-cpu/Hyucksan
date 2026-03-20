@@ -9,6 +9,13 @@
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; color: #333; }
         .card { background: white; width: 100%; max-width: 480px; padding: 30px 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; }
         h1 { color: var(--primary); font-size: 26px; margin: 0 0 15px 0; border-bottom: 3px solid var(--primary); padding-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        /* 💳 상단 계좌번호 박스 스타일 */
+        .account-box { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center; width: 100%; box-sizing: border-box; }
+        .account-title { font-size: 13px; color: #777; font-weight: bold; margin-bottom: 5px; }
+        .account-number { font-size: 18px; color: var(--primary); font-weight: 800; letter-spacing: 0.5px; margin-bottom: 3px; }
+        .account-name { font-size: 13px; color: #555; }
+
         .status-tag { font-size: 11px; font-weight: bold; margin-bottom: 20px; display: inline-block; padding: 6px 14px; border-radius: 50px; background: #eee; transition: 0.3s; }
         .status-success { background: #e8f5e9; color: #2e7d32; }
         .search-box { margin-bottom: 20px; }
@@ -46,6 +53,13 @@
 
 <div class="card">
     <h1>🏛️ 혁산회 통합 포털</h1>
+    
+    <div class="account-box">
+        <div class="account-title">💳 혁산회 회비 계좌</div>
+        <div class="account-number">7942-07-57606 카카오뱅크</div>
+        <div class="account-name">(예금주: 한수경.혁신산우회)</div>
+    </div>
+
     <span id="loadStatus" class="status-tag">⏳ 데이터 연결 중...</span>
     
     <div class="search-box">
@@ -71,9 +85,10 @@
         <button class="bg-blue full-btn" onclick="showFortuneProcess()">🔮 오늘의 사업운</button>
     </div>
 
-    <div class="group-title">🏔️ 2026년 시산제 회비</div>
+    <div class="group-title">🏔️ 시산제</div>
     <div class="btn-group">
-        <button class="bg-red full-btn" onclick="showSisanjeFeeList()">시산제 회비 납부자</button>
+        <button class="bg-red" onclick="showSisanjePart()">시산제 참여</button>
+        <button class="bg-navy" onclick="showSisanjePay()">회비 납부</button>
     </div>
 </div>
 
@@ -98,7 +113,6 @@
 </div>
 
 <script>
-    // 전달해주신 웹앱 URL이 완벽하게 적용되었습니다!
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYi0x-rLxpEufe2cqwSGVRub6vCcItpVJHrFR8jYkDvOs7fxnuhndVSA4G_fSeDJjJ/exec"; 
 
     let memberData = [];
@@ -140,7 +154,8 @@
         info.style.display = "block";
         
         const feeAnnual = Number(user['금액']) > 0 ? Number(user['금액']).toLocaleString() + '원 납부' : '미납/정보없음';
-        const feeSisanje = user['시산제 회비'] || '미납/정보없음';
+        const sFee = Number(user['시산제 회비']);
+        const feeSisanje = (sFee > 0) ? sFee.toLocaleString() + '원 납부' : '미납/정보없음';
         const sponsor2026 = user['2026년 협찬 누적'] ? Number(user['2026년 협찬 누적']).toLocaleString() + '원' : '0원';
         const sponsorSisanje = user['시산제 협찬'] ? Number(user['시산제 협찬']).toLocaleString() + '원' : '0원';
 
@@ -152,7 +167,7 @@
             </div>
             <div class="fee-row">
                 <span class="fee-title">시산제 회비</span>
-                <span class="${feeSisanje !== '미납/정보없음' ? 'highlight' : ''}">${feeSisanje}</span>
+                <span class="${feeSisanje.includes('납부') ? 'highlight' : ''}">${feeSisanje}</span>
             </div>
             <div class="fee-row">
                 <span class="fee-title">2026년 누적 협찬</span>
@@ -194,14 +209,53 @@
         list.innerHTML = html;
     }
 
-    function showSisanjeFeeList() {
+    /* 🏔️ 시산제 참여 명단 (0원 이상) */
+    function showSisanjePart() {
         if(!isDataLoaded) return;
         resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
-        let html = `<h3>🏔️ 시산제 회비 납부자 명단</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
+        let html = `<h3>🏔️ 시산제 참여 명단</h3><p style="font-size:12px; color:#777;">(참여가 확인된 회원님들입니다)</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
         
-        const sisanjeMembers = memberData.filter(u => u['시산제 회비'] && u['시산제 회비'].toString().trim() !== '');
-        sisanjeMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
+        const partMembers = memberData.filter(u => Number(u['시산제 회비']) > 0);
+        partMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
         html += `</div>`;
+        list.innerHTML = html;
+    }
+
+    /* 💳 시산제 회비 납부 명단 (납부/미납 분리) */
+    function showSisanjePay() {
+        if(!isDataLoaded) return;
+        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
+        
+        const paidMembers = memberData.filter(u => Number(u['시산제 회비']) > 0);
+        const unpaidMembers = memberData.filter(u => {
+            const fee = Number(u['시산제 회비']);
+            return isNaN(fee) || fee <= 0 || u['시산제 회비'] === '';
+        });
+
+        paidMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko'));
+        unpaidMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko'));
+
+        let html = `<h3>💳 시산제 회비 납부 현황</h3>`;
+        
+        html += `<h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">✅ 납부 완료 (${paidMembers.length}명)</h4>`;
+        html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom: 25px;">`;
+        paidMembers.forEach(u=> html += `<div>${u.성명} 회원님</div>`);
+        html += `</div>`;
+
+        html += `<h4 style="color: #d32f2f; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">⏳ 미납부 (${unpaidMembers.length}명)</h4>`;
+        html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom: 15px;">`;
+        unpaidMembers.forEach(u=> html += `<div style="color: #777;">${u.성명} 회원님</div>`);
+        html += `</div>`;
+
+        // 화면 맨 아래에 계좌번호 다시 안내
+        html += `
+            <div style="margin-top:30px; padding:20px; background:#f8f9fa; border-radius:15px; border:2px dashed var(--primary); text-align:center;">
+                <p style="font-size:14px; font-weight:bold; color:#555; margin:0 0 8px 0;">💳 시산제 회비 납부 계좌</p>
+                <p style="font-size:18px; color:var(--primary); font-weight:800; margin:0;">7942-07-57606 카카오뱅크</p>
+                <p style="font-size:13px; color:#666; margin:5px 0 0 0;">(한수경.혁신산우회)</p>
+            </div>
+        `;
+        
         list.innerHTML = html;
     }
 
