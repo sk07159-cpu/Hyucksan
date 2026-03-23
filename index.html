@@ -5,24 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>혁산회 통합 포털</title>
     <style>
-        :root { --primary: #1a237e; --gold: #ffd700; --blue: #0288d1; --green: #2e7d32; --orange: #ef6c00; --bg: #f5f5f5; }
+        :root { --primary: #1a237e; --gold: #ffd700; --blue: #0288d1; --green: #2e7d32; --orange: #ef6c00; --bg: #f5f5f5; --teal: #00897b; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; color: #333; }
         .card { background: white; width: 100%; max-width: 480px; padding: 30px 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; }
         h1 { color: var(--primary); font-size: 26px; margin: 0 0 15px 0; border-bottom: 3px solid var(--primary); padding-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         
-        /* 💳 상단 계좌번호 박스 스타일 */
-        .account-box { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center; width: 100%; box-sizing: border-box; }
-        .account-title { font-size: 13px; color: #777; font-weight: bold; margin-bottom: 5px; }
-        .account-number { font-size: 18px; color: var(--primary); font-weight: 800; letter-spacing: 0.5px; margin-bottom: 3px; }
-        .account-name { font-size: 13px; color: #555; }
-
         .status-tag { font-size: 11px; font-weight: bold; margin-bottom: 20px; display: inline-block; padding: 6px 14px; border-radius: 50px; background: #eee; transition: 0.3s; }
         .status-success { background: #e8f5e9; color: #2e7d32; }
         .search-box { margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 16px; border: 2px solid #ddd; border-radius: 15px; font-size: 17px; outline: none; box-sizing: border-box; text-align: center; transition: 0.3s; }
         textarea { height: 120px; text-align: left; resize: none; font-family: inherit; margin-top: 10px; white-space: pre-wrap; }
         
-        /* 그룹 타이틀 스타일 */
         .group-title { font-size: 14px; font-weight: bold; color: #555; text-align: left; margin: 20px 0 8px 5px; padding-bottom: 5px; border-bottom: 2px dashed #eee; }
         
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 10px; }
@@ -37,6 +30,7 @@
         .bg-gold { background: #fbc02d; color: #333; }
         .bg-gray { background: #546e7a; }
         .bg-red { background: #d32f2f; }
+        .bg-teal { background: var(--teal); }
 
         #displayArea { width: 100%; max-width: 480px; display: none; }
         .content-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-top: 20px; text-align: left; }
@@ -48,7 +42,6 @@
         .fee-title { font-weight: bold; color: #555; }
         .lotto-ball { display: inline-block; width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 50%; background: #ffca28; color: #333; font-weight: bold; font-size: 14px; border: 1.5px solid #ffa000; margin-right: 4px; }
         
-        /* 🌷 예쁜 알림창 (Toast) 스타일 */
         .toast { visibility: hidden; min-width: 250px; background-color: rgba(0, 0, 0, 0.85); color: #fff; text-align: center; border-radius: 30px; padding: 16px 20px; position: fixed; z-index: 1000; left: 50%; bottom: 40px; transform: translateX(-50%); font-size: 15px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: opacity 0.4s, bottom 0.4s; opacity: 0; line-height: 1.4; }
         .toast.show { visibility: visible; opacity: 1; bottom: 60px; }
     </style>
@@ -59,23 +52,17 @@
 
 <div class="card">
     <h1>🏛️ 혁산회 통합 포털</h1>
-    
-    <div class="account-box">
-        <div class="account-title">💳 혁산회 회비 계좌</div>
-        <div class="account-number">7942-07-57606 카카오뱅크</div>
-        <div class="account-name">(예금주: 한수경.혁신산우회)</div>
-    </div>
-
     <span id="loadStatus" class="status-tag">⏳ 데이터 연결 중...</span>
     
     <div class="search-box">
         <input type="text" id="nameInput" placeholder="성명을 입력하세요">
     </div>
 
-    <div class="group-title">💰 연회비</div>
+    <div class="group-title">💰 연회비 및 계좌</div>
     <div class="btn-group">
         <button class="bg-navy" onclick="showFeeInfo()">나의 회비</button>
         <button class="bg-blue" onclick="showList()">정회원 보기</button>
+        <button class="bg-teal full-btn" onclick="showAccount()">💳 혁산회 계좌 안내</button>
     </div>
 
     <div class="group-title">🤝 협찬</div>
@@ -88,13 +75,12 @@
     <div class="btn-group">
         <button class="bg-green" onclick="showBusiness()">사업장 소개</button>
         <button class="bg-gray" onclick="showBizEdit()">내 사업장 수정</button>
-        <button class="bg-blue full-btn" onclick="showFortuneProcess()">🔮 오늘의 사업운</button>
     </div>
 
-    <div class="group-title" id="eventGroupTitle">🏔️ 행사</div>
+    <div class="group-title" id="eventGroupTitle">🏔️ 해당 행사</div>
     <div class="btn-group">
         <button class="bg-red" id="eventPartBtn" onclick="showEventPart()">행사 참여</button>
-        <button class="bg-navy" onclick="showEventPay()">회비 납부</button>
+        <button class="bg-blue" onclick="showFortuneProcess()">🔮 오늘의 사업운</button>
     </div>
 </div>
 
@@ -119,13 +105,11 @@
 </div>
 
 <script>
-    // 회원님이 제공해주신 새로운 웹앱 URL 적용 완료!
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLmRiUU_WDJdK6qIklVlHOccGTjTyvCpV1t4JM5A55HBCXyC85mr0EGdydamYDSsA/exec"; 
 
     let memberData = [];
     let isDataLoaded = false;
 
-    // 현재 달의 행사 변수 (시트 오른쪽 열을 기반으로 자동 세팅됨)
     let currentEventName = "시산제";
     let currentEventFeeCol = "시산제 회비";
     let currentEventSponCol = "시산제 협찬";
@@ -139,19 +123,17 @@
             statusTag.innerText = "✅ 실시간 데이터 연결 성공";
             statusTag.className = "status-tag status-success";
 
-            // 🎯 스마트 자동화: 가장 최근(오른쪽)에 만들어진 행사 회비 열 찾기
+            // 스마트 자동화: 가장 최근(오른쪽)에 만들어진 행사 회비 열 찾기
             if(memberData.length > 0) {
                 const keys = Object.keys(memberData[0]);
                 for (let i = keys.length - 1; i >= 0; i--) {
-                    // '회비'라는 글자가 들어가고, '연회비'가 아닌 가장 우측 열을 찾음
                     if (keys[i].includes('회비') && !keys[i].includes('연회비')) {
                         currentEventFeeCol = keys[i];
-                        currentEventName = keys[i].replace('회비', '').trim(); // "시산제 회비" -> "시산제"
+                        currentEventName = keys[i].replace('회비', '').trim(); 
                         break;
                     }
                 }
                 
-                // 해당 행사의 협찬 열 찾기 (예: "시산제 협찬")
                 for (let i = keys.length - 1; i >= 0; i--) {
                     if (keys[i].includes(currentEventName) && keys[i].includes('협찬')) {
                         currentEventSponCol = keys[i];
@@ -159,7 +141,6 @@
                     }
                 }
 
-                // 화면 메뉴 이름 자동 업데이트
                 document.getElementById('eventGroupTitle').innerText = `🏔️ ${currentEventName}`;
                 document.getElementById('eventPartBtn').innerText = `${currentEventName} 참여`;
                 document.getElementById('eventSponBtn').innerText = `${currentEventName} 협찬`;
@@ -168,7 +149,6 @@
         } catch(e) { statusTag.innerText = "❌ 연결 실패 (새로고침 하세요)"; }
     };
 
-    /* 🌷 정중한 알림창 함수 */
     function showToast(msg) {
         const toast = document.getElementById("toastMsg");
         toast.innerText = msg;
@@ -194,6 +174,25 @@
         document.getElementById('bizEditSection').style.display = "none";
     }
 
+    // 💳 혁산회 계좌 예쁘게 보여주기
+    function showAccount() {
+        resetDisplay(); 
+        const list = document.getElementById('listContent'); 
+        list.style.display = "block";
+        
+        list.innerHTML = `
+            <h3>💳 혁산회 회비 계좌 안내</h3>
+            <div style="margin-top:20px; padding:30px 20px; background:#f8f9fa; border-radius:20px; border:2px dashed var(--teal); text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <p style="font-size:15px; font-weight:bold; color:#555; margin:0 0 10px 0;">혁산회 공식 계좌</p>
+                <p style="font-size:24px; color:var(--teal); font-weight:900; margin:0; letter-spacing: 1px;">7942-07-57606</p>
+                <p style="font-size:17px; color:#333; font-weight:bold; margin:8px 0 10px 0;">카카오뱅크</p>
+                <div style="display:inline-block; padding:5px 15px; background:#eee; border-radius:10px; font-size:14px; color:#555;">
+                    예금주 : 한수경 (혁신산우회)
+                </div>
+            </div>
+        `;
+    }
+
     function showFeeInfo() {
         const user = findUser(); if(!user) return;
         resetDisplay();
@@ -202,11 +201,10 @@
         
         const feeAnnual = Number(user['금액']) > 0 ? Number(user['금액']).toLocaleString() + '원 납부' : '미납/정보없음';
         
-        // 🎯 10원 입력 시 메시지 처리 로직
         const eFeeRaw = Number(user[currentEventFeeCol]);
         let feeEventHtml = '미신청/미납';
         if (eFeeRaw === 10) {
-            feeEventHtml = `<span style="color:#d32f2f; font-weight:bold;">${currentEventName} 회비 송금해 주세요 🙏</span>`;
+            feeEventHtml = `<span style="color:#f57c00; font-weight:bold;">${currentEventName} 회비 입금 확인 중 🔍</span>`;
         } else if (eFeeRaw >= 10000) {
             feeEventHtml = `<span class="highlight">${eFeeRaw.toLocaleString()}원 납부</span>`;
         }
@@ -266,51 +264,29 @@
         list.innerHTML = html;
     }
 
-    /* 🏔️ 동적 행사 참여 명단 (10원 이상) */
+    // 🏔️ 통합된 동적 행사 참여 신청 현황
     function showEventPart() {
         if(!isDataLoaded) return;
         resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
         
-        const partMembers = memberData.filter(u => Number(u[currentEventFeeCol]) >= 10);
-        
-        let html = `<h3>🏔️ ${currentEventName} 참여 명단 (${partMembers.length}명)</h3><p style="font-size:12px; color:#777;">(참석 신청이 확인된 회원님들입니다)</p><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:15px;">`;
-        partMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko')).forEach(u=> html += `<div>${u.성명} 회원님</div>`);
-        html += `</div>`;
-        list.innerHTML = html;
-    }
-
-    /* 💳 동적 행사 회비 납부 명단 (10원=미납 / 10000원이상=납부) */
-    function showEventPay() {
-        if(!isDataLoaded) return;
-        resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
-        
         const paidMembers = memberData.filter(u => Number(u[currentEventFeeCol]) >= 10000);
-        // 정확히 10원만 입력된 사람을 미납부자로 분류
         const unpaidMembers = memberData.filter(u => Number(u[currentEventFeeCol]) === 10);
 
         paidMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko'));
         unpaidMembers.sort((a,b)=>a.성명.localeCompare(b.성명,'ko'));
 
-        let html = `<h3>💳 ${currentEventName} 회비 납부 현황</h3>`;
+        let html = `<h3>🏔️ ${currentEventName} 참여 신청 현황</h3>`;
         
-        html += `<h4 style="color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">✅ 납부 완료 (${paidMembers.length}명)</h4>`;
+        html += `<h4 style="color: var(--primary); margin-bottom: 10px; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 5px;">✅ 회비 납부 확인되신 분 (${paidMembers.length}명)</h4>`;
         html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom: 25px;">`;
         paidMembers.forEach(u=> html += `<div>${u.성명} 회원님</div>`);
         html += `</div>`;
 
-        html += `<h4 style="color: #d32f2f; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">⏳ 미납부 (${unpaidMembers.length}명)</h4>`;
+        html += `<h4 style="color: var(--orange); margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">🔍 회비 납부 확인 중인 분 (${unpaidMembers.length}명)</h4>`;
         html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom: 15px;">`;
         unpaidMembers.forEach(u=> html += `<div style="color: #777;">${u.성명} 회원님</div>`);
         html += `</div>`;
 
-        html += `
-            <div style="margin-top:30px; padding:20px; background:#f8f9fa; border-radius:15px; border:2px dashed var(--primary); text-align:center;">
-                <p style="font-size:14px; font-weight:bold; color:#555; margin:0 0 8px 0;">💳 회비 납부 계좌</p>
-                <p style="font-size:18px; color:var(--primary); font-weight:800; margin:0;">7942-07-57606 카카오뱅크</p>
-                <p style="font-size:13px; color:#666; margin:5px 0 0 0;">(한수경.혁신산우회)</p>
-            </div>
-        `;
-        
         list.innerHTML = html;
     }
 
@@ -332,7 +308,6 @@
         list.innerHTML = html;
     }
 
-    /* 💡 저장 버그가 수정된 saveData 함수 */
     async function saveData(action) {
         if(!window.currentUser) return;
         let payload = { name: window.currentUser.성명, action: action };
@@ -424,6 +399,17 @@
         const color = colors[(finalSeed + 11) % colors.length];
         const energy = ((finalSeed * 13) % 11) + 90;
 
+        let partner = "없음";
+        if (memberData.length > 1) {
+            let pIndex = (finalSeed + 77) % memberData.length;
+            let pUser = memberData[pIndex];
+            if (pUser.성명 === user.성명) { 
+                pIndex = (pIndex + 1) % memberData.length;
+                pUser = memberData[pIndex];
+            }
+            partner = pUser.성명;
+        }
+
         const lotto = [];
         let lSeed = finalSeed;
         while(lotto.length < 7) { 
@@ -443,6 +429,8 @@
             <p>⚡ 사업장 에너지: <span class="highlight">${energy}%</span></p>
             <p>🎨 행운 색상: <b>${color}</b></p>
             <p>🍽️ 추천맛집: <b>${rest}</b></p>
+            <p>🤝 오늘의 찰떡궁합 짝꿍: <b style="color:var(--orange); font-size:16px;">${partner} 회원님</b></p>
+            
             <div style="margin:20px 0; padding:15px; background:#fff; border-radius:15px; border:1px solid #eee; text-align:center;">
                 <p style="font-size:14px; margin-bottom:10px; font-weight:bold; color:#666;">🍀 행운 숫자 (로또):</p>
                 <div class="lotto-container">${lotto.map(n => `<span class="lotto-ball">${n}</span>`).join('')}</div>
