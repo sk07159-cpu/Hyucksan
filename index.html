@@ -123,7 +123,6 @@
             statusTag.innerText = "✅ 실시간 데이터 연결 성공";
             statusTag.className = "status-tag status-success";
 
-            // 스마트 자동화: 가장 최근(오른쪽)에 만들어진 행사 회비 열 찾기
             if(memberData.length > 0) {
                 const keys = Object.keys(memberData[0]);
                 for (let i = keys.length - 1; i >= 0; i--) {
@@ -156,6 +155,16 @@
         setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
     }
 
+    // 💡 계좌번호 복사 스마트 기능 추가
+    function copyAccount() {
+        const accountNumber = "79420757606";
+        navigator.clipboard.writeText(accountNumber).then(() => {
+            showToast("💳 계좌번호가 복사되었습니다!\n은행 앱에 붙여넣기 해주세요. 🌷");
+        }).catch(err => {
+            showToast("복사 기능을 지원하지 않는 기기입니다.\n직접 입력해 주세요.");
+        });
+    }
+
     function findUser() {
         if(!isDataLoaded) { showToast("데이터 로딩 중입니다. 잠시만 기다려주세요."); return null; }
         const name = document.getElementById('nameInput').value.trim();
@@ -174,7 +183,7 @@
         document.getElementById('bizEditSection').style.display = "none";
     }
 
-    // 💳 혁산회 계좌 예쁘게 보여주기
+    // 💳 혁산회 계좌 (복사 버튼 추가)
     function showAccount() {
         resetDisplay(); 
         const list = document.getElementById('listContent'); 
@@ -186,9 +195,10 @@
                 <p style="font-size:15px; font-weight:bold; color:#555; margin:0 0 10px 0;">혁산회 공식 계좌</p>
                 <p style="font-size:24px; color:var(--teal); font-weight:900; margin:0; letter-spacing: 1px;">7942-07-57606</p>
                 <p style="font-size:17px; color:#333; font-weight:bold; margin:8px 0 10px 0;">카카오뱅크</p>
-                <div style="display:inline-block; padding:5px 15px; background:#eee; border-radius:10px; font-size:14px; color:#555;">
+                <div style="display:inline-block; padding:5px 15px; background:#eee; border-radius:10px; font-size:14px; color:#555; margin-bottom: 20px;">
                     예금주 : 한수경 (혁신산우회)
                 </div>
+                <button onclick="copyAccount()" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition:0.2s;">📋 계좌번호 복사하기</button>
             </div>
         `;
     }
@@ -264,7 +274,7 @@
         list.innerHTML = html;
     }
 
-    // 🏔️ 통합된 동적 행사 참여 신청 현황
+    // 🏔️ 통합된 동적 행사 참여 신청 현황 + 하단 계좌 안내 (복사 버튼 포함)
     function showEventPart() {
         if(!isDataLoaded) return;
         resetDisplay(); const list = document.getElementById('listContent'); list.style.display = "block";
@@ -286,6 +296,19 @@
         html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom: 15px;">`;
         unpaidMembers.forEach(u=> html += `<div style="color: #777;">${u.성명} 회원님</div>`);
         html += `</div>`;
+
+        // 💡 하단에 예쁜 계좌 안내 박스 + 복사 버튼 삽입
+        html += `
+            <div style="margin-top:35px; padding:25px 20px; background:#f8f9fa; border-radius:20px; border:2px dashed var(--teal); text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <p style="font-size:15px; font-weight:bold; color:#555; margin:0 0 10px 0;">💳 ${currentEventName} 회비 납부 계좌</p>
+                <p style="font-size:24px; color:var(--teal); font-weight:900; margin:0; letter-spacing: 1px;">7942-07-57606</p>
+                <p style="font-size:17px; color:#333; font-weight:bold; margin:8px 0 10px 0;">카카오뱅크</p>
+                <div style="display:inline-block; padding:5px 15px; background:#eee; border-radius:10px; font-size:14px; color:#555; margin-bottom: 20px;">
+                    예금주 : 한수경 (혁신산우회)
+                </div>
+                <button onclick="copyAccount()" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition:0.2s;">📋 계좌번호 복사하기</button>
+            </div>
+        `;
 
         list.innerHTML = html;
     }
